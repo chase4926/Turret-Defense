@@ -1,12 +1,53 @@
 
 require 'yaml'
 
-
 #
 # Returns true if the directory exists (convenience method)
 #
 def directory_exists?(directory)
   File.directory? directory
+end
+
+
+=begin
+#
+# Does a recursive search of a directory
+#
+def old_recursive_search_directory(directory, path_so_far=nil)
+  result = []
+  search_directory(directory).each do |path|
+    if File.directory?(path) then
+      if path_so_far == nil then
+        next_path_so_far = path.split('/').last
+      else
+        next_path_so_far = "#{path_so_far}/#{path.split('/').last}"
+      end
+      recursive_search_directory(path, next_path_so_far).each do |n|
+        result << n
+      end
+    else
+      if path_so_far == nil then
+        result << path.split('/').last
+      else
+        result << "#{path_so_far}/#{path.split('/').last}"
+      end
+    end
+  end
+  return result
+end
+=end
+
+
+#
+# Does a recursive search of a directory
+#
+def recursive_search_directory(directory, path_so_far=nil)
+  result = Dir.glob(File.join(directory, '**/*'))
+  result.each_index do |i|
+    result[i] = nil if File.directory?(result[i])
+  end
+  result.compact!
+  return result
 end
 
 
@@ -92,10 +133,10 @@ end
 # Returns the contents of an entire file read into a string
 #
 def file_read(file)
-  vputs "Reading file " + file
-  if ! File.exists?(file) then
-    vputs "That file doesn't exist: "  + file.inspect
-    return ""
+  vputs "Reading file #{file}"
+  if not File.exists?(file) then
+    vputs "That file doesn't exist: #{file.inspect}"
+    return ''
   end
   f = File.open(file, 'r')
     string = f.read
@@ -108,7 +149,7 @@ end
 # Returns the contents of a yaml file
 #
 def yamlfileread(file)
-  if ! File.exists?(file) then
+  if not File.exists?(file) then
     vputs "That file doesn't exist: #{file.inspect}"
     return ''
   end
@@ -120,7 +161,7 @@ end
 # Creates a file with filename file, and fills it with file_contents
 #
 def create_file(file, file_contents)
-  vputs "Creating file: " + file
+  vputs "Creating file: #{file}"
   begin
     File.open(file, 'w+') do |f|  # open file for update
       f.print file_contents       # write file_contents to the file
@@ -138,11 +179,8 @@ def smoother(number, target_number, rate)
   if (number - target_number).abs > rate then
     if number < target_number then
       return (number + rate)
-    elsif number > target_number then
+    else # number > target_number
       return (number - rate)
-    else
-      vputs "Error in method: smoother"
-      return 0
     end
   else
     return target_number

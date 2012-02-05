@@ -2,7 +2,8 @@
 
 class Info_Bar
   def initialize(window)
-    @image = window.image_hash['sidebar.png']
+    @image = window.image_hash['gui/sidebar.png']
+    @adjust_aim_image = window.image_hash['gui/buttons/adjust_aim_button.png']
     @x = 864
     @y = 64
     @width = 128
@@ -32,7 +33,9 @@ class Info_Bar
   def draw(window)
     if @target != nil then
       @image.draw(@x, @y, 4, 1, 1, @color)
-      #window.draw_quad(@x, @y, @color, @x + @width, @y, @color, @x, @y + @height, @color, @x + @width, @y + @height, @color, 4)
+      if @target.is_a?(Turret)
+        @adjust_aim_image.draw(@x+16, @y+192, 4.1)
+      end
     end
   end
 end

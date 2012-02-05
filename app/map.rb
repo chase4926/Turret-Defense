@@ -12,7 +12,7 @@ class Turret
   end
   
   def within?(x, y)
-    if x > (@x - 32) and x < (@x + 32) and y > (@y - 32) and y < (@y + 32) then
+    if distance(@x, @y, x, y) < 20 then
       return true
     else
       return false

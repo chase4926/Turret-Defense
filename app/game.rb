@@ -20,15 +20,15 @@ class GameWindow < Gosu::Window
   def initialize
     super(1024, 768, false)
     self.caption = 'Turret Defense'
-    @image_hash = load_images()
+    @image_hash = load_images('../images')
     @map = Map.new(self)
     @gui = Gui.new(self)
   end # End GameWindow Initialize
   
-  def load_images()
+  def load_images(path)
     result = {}
-    search_directory('../images').each do |image_path|
-      result[image_path.split('/').last] = Image.new(self, image_path, true)
+    recursive_search_directory(path).each do |image_path|
+      result[image_path.split(File.join(path,''), 2)[1]] = Image.new(self, image_path, true)
     end
     return result
   end
