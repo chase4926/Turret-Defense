@@ -2,8 +2,8 @@
 
 class Info_Bar
   def initialize(window)
-    @image = window.image_hash['gui/sidebar.png']
-    @adjust_aim_image = window.image_hash['gui/buttons/adjust_aim_button.png']
+    @image = Media::get_image('gui/sidebar.png')
+    @adjust_aim_image = Media::get_image('gui/buttons/adjust_aim_button.png')
     @x = 864
     @y = 64
     @width = 128

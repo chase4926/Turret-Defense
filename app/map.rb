@@ -31,6 +31,7 @@ class Turret
     else
       @angle -= recoil
     end
+    # TODO: Spawn bullets here
   end
   
   def update()
@@ -87,6 +88,8 @@ class Enemy_Spawner
         @enemy_color = Color::GREEN
       when 2 # vibrant G no B
         @enemy_color = Color::BLUE
+      when 3 # christmas W
+        @enemy_color = Color::WHITE
     end
   end
   
@@ -142,6 +145,7 @@ class Map
     @tile_array = Array.new(24){Array.new(32)}
     @theme = 0
     @map_image = nil
+    @map_image_background = nil
     @enemy_spawner_array = []
     @enemy_exit_array = []
     @enemy_array = []
@@ -156,21 +160,24 @@ class Map
   end
   
   def add_enemy(x, y, path, color)
-    @enemy_array << Enemy.new(x, y, path, @window.image_hash['enemy.png'], color)
+    @enemy_array << Enemy.new(x, y, path, Media::get_image('enemy.png'), color)
   end
   
   def load_map()
-    @theme = random(0,2)
+    #@theme = random(0,2)
+    # Christmas update funsies
+    @theme = 3
     @map_image = nil
     file_contents = file_read('../maps/map.txt')
-    x,y = 0,0
+    x = 0
+    y = 0
     file_contents.each_line do |line|
       line.each_char do |char|
         case char
           when '#'
             @tile_array[y][x] = char
           when 'T'
-            @turret_array << Turret.new(@window.image_hash['turret.png'], x*32, y*32)
+            @turret_array << Turret.new(Media::get_image('turret.png'), x*32, y*32)
           when 'S'
             @enemy_spawner_array << [x,y]
           when 'E'
@@ -185,6 +192,8 @@ class Map
       @enemy_spawner_array[i] = Enemy_Spawner.new(@enemy_spawner_array[i][0], @enemy_spawner_array[i][1], self)
       @enemy_spawner_array[i].spawn_enemy() # FIXME: Just for testing
     end
+    
+    record_map_images()
   end
   
   def save_map()
@@ -202,30 +211,53 @@ class Map
     end
   end
   
-  def draw()
-    # Map draws ---
-    if @map_image.is_a?(Gosu::Image) then
-      @map_image.draw(0, 0, 1)
-    else
-      @map_image = @window.record(1024, 768) do
-        @tile_array.each_index do |y|
-          @tile_array[y].each_index do |x|
-            if @tile_array[y][x] == '#' then
-              case @theme
-                when 0 # cold
-                  color = Color.new(255, 0, random(50,255), random(50,255))
-                when 1 # warm
-                  color = Color.new(255, random(50,255), 0, random(50,255))
-                when 2 # vibrant
-                  color = Color.new(255, random(50,255), random(50,255), 0)
-              end
-              @window.draw_quad(x*32, y*32, color, (x*32)+32, y*32, color, x*32, (y*32)+32, color, (x*32)+32, (y*32)+32, color, 1)
-              @window.image_hash['wall.png'].draw(x*32, y*32, 2)
-            end
+  def get_theme_color()
+    case @theme
+      when 0 # cold
+        return Color.new(255, 0, random(100,255), random(100,255))
+      when 1 # warm
+        return Color.new(255, random(100,255), 0, random(100,255))
+      when 2 # vibrant
+        return Color.new(255, random(100,255), random(100,255), 0)
+      when 3 # christmas
+        if rand(2) == 0 then
+          return Color.new(255, random(100,255), 0, 0)
+        else
+          return Color.new(255, 0, random(100,255), 0)
+        end
+    end
+  end
+  
+  def record_map_images()
+    # Foreground
+    @map_image = @window.record(1024, 768) do
+      @tile_array.each_index do |y|
+        @tile_array[y].each_index do |x|
+          if @tile_array[y][x] == '#' then
+            color = get_theme_color()
+            @window.draw_quad(x*32, y*32, color, (x*32)+32, y*32, color, x*32, (y*32)+32, color, (x*32)+32, (y*32)+32, color, 1)
+            Media::get_image('wall.png').draw(x*32, y*32, 2)
           end
         end
       end
     end
+    # Background
+    @map_image_background = @window.record(1024, 768) do
+      @tile_array.each_index do |y|
+        @tile_array[y].each_index do |x|
+          color = get_theme_color()
+          @window.draw_quad(x*32, y*32, color, (x*32)+32, y*32, color, x*32, (y*32)+32, color, (x*32)+32, (y*32)+32, color, 1)
+          Media::get_image('wall.png').draw(x*32, y*32, 2)
+        end
+      end
+      @window.draw_quad(0, 0, 0xc8000000, 1024, 0, 0xc8000000, 0, 768, 0xc8000000, 1024, 768, 0xc8000000, 3)
+    end
+  end
+  
+  def draw()
+    # Map draws ---
+    @map_image.draw(0, 0, 1)
+    @map_image_background.draw(0, 0, 0)
     # ---
     # Other draws ---
     @turret_array.each do |turret|
